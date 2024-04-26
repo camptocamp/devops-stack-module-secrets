@@ -1,19 +1,23 @@
-= devops-stack-module-template
+= devops-stack-module-secrets
 // Document attributes to replace along the document
 // Here you can define variables for something that keeps repeating along the text
-:CHART-DEPENDENCY-1-NAME-chart-version: 1.2.3
-:CHART-DEPENDENCY-2-NAME-chart-version: 1.2.3
-:original-repo-url: https://github.com/path/to/some/repository
+:external-secrets-chart-version: 0.9.16
+:reloader-chart-version: 1.0.83
+:external-secrets-original-repo-url: https://github.com/external-secrets/external-secrets
+:reloader-original-repo-url: https://github.com/stakater/Reloader
 
-A https://devops-stack.io[DevOps Stack] module to deploy *_something_*.
+A https://devops-stack.io[DevOps Stack] module to deploy the External Secrets Operator.
 
-The *_something_* chart used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions. 
+The charts used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions. 
 
 [cols="1,1,1",options="autowidth,header"]
 |===
 |Current Chart Version |Original Repository |Default Values
-|*{CHART-DEPENDENCY-1-NAME-chart-version}* |{original-repo-url}/subpath/to/the/chart[Chart] |{original-repo-url}/subpath/to/the/values.yaml[`values.yaml`] (_here you can also use artifacthub.io_)
+|*{external-secrets-chart-version}* |{external-secrets-original-repo-url}/tree/main/deploy/charts/external-secrets[Chart] |https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets/{{external-secrets-chart-version}?modal=values[`values.yaml`]
+|*{reloader-chart-version}* |{reloader-original-repo-url}tree/master/deployments/kubernetes/chart/reloader[Chart] |https://artifacthub.io/packages/helm/stakater/reloader/{reloader-chart-version}?modal=values[`values.yaml`]
 |===
+
+// TODO From below here
 
 == Usage
 
