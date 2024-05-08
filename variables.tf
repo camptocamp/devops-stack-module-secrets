@@ -48,6 +48,12 @@ variable "helm_values" {
   default     = []
 }
 
+variable "deep_merge_append_list" {
+  description = "A boolean flag to enable/disable appending lists instead of overwriting them."
+  type        = bool
+  default     = false
+}
+
 variable "app_autosync" {
   description = "Automated sync options for the Argo CD Application resource."
   type = object({
@@ -71,3 +77,125 @@ variable "dependency_ids" {
 #######################
 ## Module variables
 #######################
+
+variable "enable_service_monitor" {
+  description = "Enable Prometheus ServiceMonitor in the Helm chart."
+  type        = bool
+  default     = true
+}
+
+variable "resources" {
+  description = <<-EOT
+    Resource limits and requests for External Secrets's and Reloader's components. Follow the style on https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/[official documentation] to understand the format of the values.
+
+    IMPORTANT: These are not production values. You should always adjust them to your needs.
+  EOT
+  type = object({
+
+    external_secrets_operator = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "64Mi")
+      }), {})
+    }), {})
+
+    external_secrets_webhook = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "64Mi")
+      }), {})
+    }), {})
+
+    external_secrets_cert_controller = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "64Mi")
+      }), {})
+    }), {})
+
+    reloader = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "64Mi")
+      }), {})
+    }), {})
+
+  })
+  default = {}
+}
+
+variable "replicas" {
+  description = "Number of replicas for the External Secrets and Reloader components."
+  type = object({
+    external_secrets = number
+    reloader         = number
+  })
+  default = {
+    external_secrets = 1
+    reloader         = 1
+  }
+  nullable = false
+
+  validation {
+    condition     = var.replicas.external_secrets >= 1
+    error_message = "The number of replicas for the External Secrets component must be greater than or equal to 1."
+  }
+
+  validation {
+    condition     = var.replicas.reloader >= 1
+    error_message = "The number of replicas for the Reloader component must be greater than or equal to 1."
+  }
+}
+
+variable "auto_reload_all" {
+  description = "TODO" # TODO
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
+variable "aws_iam_role" {
+  description = "IAM Role configuration to allow External Secrets to use AWS Secrets Manager as a backend. This variable is mutually exclusive with the `aws_iam_access_key` variable, that is, if you set both at the same time, no `ClusterSecretStore` will be created."
+  type = object({
+    create_role             = optional(bool, false)
+    iam_role_arn            = optional(string, null)
+    cluster_oidc_issuer_url = optional(string, null)
+  })
+  default = null
+
+  validation {
+    condition     = try(var.aws_iam_role.create_role ? var.aws_iam_role.cluster_oidc_issuer_url != null : var.aws_iam_role.iam_role_arn != null, true)
+    error_message = "If you want to create a role, you need to provide the OIDC issuer's URL for the EKS cluster. Otherwise, you need to provide the ARN of the IAM role you created."
+  }
+}
+
+variable "aws_iam_access_key" {
+  description = "AWS Access Key and Secret Key configuration to allow External Secrets to use AWS Secrets Manager as a backend. This variable is mutually exclusive with the `aws_iam_role` variable, that is, if you set both at the same time, no `ClusterSecretStore` will be created."
+  type = object({
+    create_iam_access_key = optional(bool, false)
+    iam_access_key        = optional(string, null)
+    iam_secret_key        = optional(string, null)
+  })
+  default = null
+
+  validation {
+    condition     = try(var.aws_iam_access_key.create_iam_access_key ? (var.aws_iam_access_key.iam_access_key == null && var.aws_iam_access_key.iam_secret_key == null) : (var.aws_iam_access_key.iam_access_key != null && var.aws_iam_access_key.iam_secret_key != null), true)
+    error_message = "If you do not want to create an IAM access key, you need to provide an access key and a secret key. If it is not the case, you should not set the attributes `iam_access_key` and `iam_secret_key."
+  }
+}
