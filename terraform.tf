@@ -14,3 +14,5 @@ terraform {
     }
   }
 }
+
+# TODO Add requirement for kubernetes provider
