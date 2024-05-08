@@ -10,11 +10,11 @@ A https://devops-stack.io[DevOps Stack] module to deploy the External Secrets Op
 
 The charts used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions. 
 
-[cols="1,1,1",options="autowidth,header"]
+[cols="1,1,1,1",options="autowidth,header"]
 |===
-|Current Chart Version |Original Repository |Default Values
-|*{external-secrets-chart-version}* |{external-secrets-original-repo-url}/tree/main/deploy/charts/external-secrets[Chart] |https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets/{{external-secrets-chart-version}?modal=values[`values.yaml`]
-|*{reloader-chart-version}* |{reloader-original-repo-url}tree/master/deployments/kubernetes/chart/reloader[Chart] |https://artifacthub.io/packages/helm/stakater/reloader/{reloader-chart-version}?modal=values[`values.yaml`]
+|Chart |Current Chart Version |Original Repository |Default Values
+|*External Secrets Operator* |*{external-secrets-chart-version}* |{external-secrets-original-repo-url}/tree/main/deploy/charts/external-secrets[Chart] |https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets/{{external-secrets-chart-version}?modal=values[`values.yaml`]
+|*Reloader* |*{reloader-chart-version}* |{reloader-original-repo-url}tree/master/deployments/kubernetes/chart/reloader[Chart] |https://artifacthub.io/packages/helm/stakater/reloader/{reloader-chart-version}?modal=values[`values.yaml`]
 |===
 
 // TODO From below here
