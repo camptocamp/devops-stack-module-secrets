@@ -1,3 +1,6 @@
+# FIXME This file needs to probably be in a different variant of the module, otherwise we would have some issues with 
+# requiring providers that are not needed (for example, requiring the AWS Terraform provider when using Azure Key Vault).
+
 data "aws_region" "current" {
   count = var.aws_iam_role != null || var.aws_iam_access_key != null ? 1 : 0
 }
