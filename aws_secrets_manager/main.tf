@@ -1,23 +1,13 @@
-# FIXME This file needs to probably be in a different variant of the module, otherwise we would have some issues with 
-# requiring providers that are not needed (for example, requiring the AWS Terraform provider when using Azure Key Vault).
-
-data "aws_region" "current" {
-  count = var.aws_iam_role != null || var.aws_iam_access_key != null ? 1 : 0
+resource "null_resource" "dependencies" {
+  triggers = var.dependency_ids
 }
 
-data "aws_secretsmanager_secrets" "secrets" {
-  count = var.aws_iam_role != null || var.aws_iam_access_key != null ? 1 : 0
+data "aws_region" "current" {}
 
-  filter {
-    name   = "tag-value"
-    values = [var.cluster_name]
-  }
-  filter {
-    name   = "tag-key"
-    values = ["devops-stack"]
-  }
-}
-
+# TODO Remove this comment if the data source above works
+# This policy allows access to ALL the Secrets Manager secrets. Although it would be better to restrict the access to 
+# only the secrets that are needed, this is not possible because of race conditions, as the secrets are created by the 
+# other modules of the DevOps Stack outside this module.
 data "aws_iam_policy_document" "secrets" {
   count = (var.aws_iam_role != null ? var.aws_iam_role.create_role : false) || (var.aws_iam_access_key != null ? var.aws_iam_access_key.create_iam_access_key : false) ? 1 : 0
 
@@ -29,8 +19,10 @@ data "aws_iam_policy_document" "secrets" {
       "secretsmanager:ListSecretVersionIds"
     ]
 
-    resources = data.aws_secretsmanager_secrets.secrets[0].arns
-
+    resources = [
+      resource.aws_secretsmanager_secret.grafana_admin_credentials.arn,
+      # TODO Add remaining secrets here when they are created
+    ]
     effect = "Allow"
   }
 }
@@ -89,18 +81,20 @@ resource "aws_iam_user_policy_attachment" "secrets" {
   policy_arn = resource.aws_iam_policy.secrets[0].arn
 }
 
-# TODO Remove this when further tests have been made
-# resource "kubernetes_namespace" "secrets_namespace" {
-#   count = var.aws_iam_access_key != null ? (var.aws_iam_access_key.create_iam_access_key || (var.aws_iam_access_key.iam_access_key != null && var.aws_iam_access_key.iam_secret_key != null) ? 1 : 0) : 0
+resource "kubernetes_namespace" "secrets_namespace" {
+  count = var.aws_iam_access_key != null ? (var.aws_iam_access_key.create_iam_access_key || (var.aws_iam_access_key.iam_access_key != null && var.aws_iam_access_key.iam_secret_key != null) ? 1 : 0) : 0
 
-#   metadata {
-#     name = "secrets"
-#   }
+  metadata {
+    name = "secrets"
+    labels = {
+      "devops-stack" = "true"
+    }
+  }
 
-#   depends_on = [
-#     resource.null_resource.dependencies,
-#   ]
-# }
+  depends_on = [
+    resource.null_resource.dependencies,
+  ]
+}
 
 resource "kubernetes_secret" "aws_secrets_manager_iam_credentials" {
   count = var.aws_iam_access_key != null ? (var.aws_iam_access_key.create_iam_access_key || (var.aws_iam_access_key.iam_access_key != null && var.aws_iam_access_key.iam_secret_key != null) ? 1 : 0) : 0
@@ -117,8 +111,33 @@ resource "kubernetes_secret" "aws_secrets_manager_iam_credentials" {
 
   depends_on = [
     resource.null_resource.dependencies,
-    resource.argocd_application.this,
+    resource.kubernetes_namespace.secrets_namespace,
   ]
 }
 
+resource "null_resource" "this" {
+  depends_on = [
+    resource.null_resource.dependencies
+  ]
+}
 
+module "secrets" {
+  source = "../"
+
+  cluster_name           = var.cluster_name
+  base_domain            = var.base_domain
+  argocd_project         = var.argocd_project
+  argocd_labels          = var.argocd_labels
+  destination_cluster    = var.destination_cluster
+  target_revision        = var.target_revision
+  enable_service_monitor = var.enable_service_monitor
+  cluster_issuer         = var.cluster_issuer
+  helm_values            = concat(local.helm_values, var.helm_values)
+  deep_merge_append_list = var.deep_merge_append_list
+  app_autosync           = var.app_autosync
+  dependency_ids         = merge(var.dependency_ids, { "this" = resource.null_resource.this.id })
+
+  resources       = var.resources
+  replicas        = var.replicas
+  auto_reload_all = var.auto_reload_all
+}

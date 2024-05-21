@@ -102,6 +102,7 @@ resource "argocd_application" "this" {
   ]
 }
 
+# TODO Add dependency on the modules that create the secrets
 resource "null_resource" "this" {
   depends_on = [
     resource.argocd_application.this,
