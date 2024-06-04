@@ -101,7 +101,7 @@ variable "resources" {
       }), {})
       limits = optional(object({
         cpu    = optional(string)
-        memory = optional(string, "64Mi")
+        memory = optional(string, "128Mi")
       }), {})
     }), {})
 
@@ -112,7 +112,7 @@ variable "resources" {
       }), {})
       limits = optional(object({
         cpu    = optional(string)
-        memory = optional(string, "64Mi")
+        memory = optional(string, "128Mi")
       }), {})
     }), {})
 
@@ -123,7 +123,7 @@ variable "resources" {
       }), {})
       limits = optional(object({
         cpu    = optional(string)
-        memory = optional(string, "64Mi")
+        memory = optional(string, "128Mi")
       }), {})
     }), {})
 
@@ -134,7 +134,7 @@ variable "resources" {
       }), {})
       limits = optional(object({
         cpu    = optional(string)
-        memory = optional(string, "64Mi")
+        memory = optional(string, "128Mi")
       }), {})
     }), {})
 
