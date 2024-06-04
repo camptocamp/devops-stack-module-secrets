@@ -11,9 +11,8 @@ resource "argocd_project" "this" {
   }
 
   spec {
-    description = "External Secrets and Reloader application project for cluster ${var.destination_cluster}"
-    # source_repos = ["https://github.com/camptocamp/devops-stack-module-secrets.git"] # TODO Activate this after moving the repo to the camptocamp org
-    source_repos = ["https://github.com/lentidas/devops-stack-module-secrets.git"]
+    description  = "External Secrets and Reloader application project for cluster ${var.destination_cluster}"
+    source_repos = ["https://github.com/camptocamp/devops-stack-module-secrets.git"]
 
     destination {
       name      = var.destination_cluster
@@ -57,8 +56,7 @@ resource "argocd_application" "this" {
     project = var.argocd_project == null ? argocd_project.this[0].metadata.0.name : var.argocd_project
 
     source {
-      # repo_url        = "https://github.com/camptocamp/devops-stack-module-secrets.git" # TODO Activate this after moving the repo to the camptocamp org
-      repo_url        = "https://github.com/lentidas/devops-stack-module-secrets.git"
+      repo_url        = "https://github.com/camptocamp/devops-stack-module-secrets.git"
       path            = "charts/secrets"
       target_revision = var.target_revision
       helm {
