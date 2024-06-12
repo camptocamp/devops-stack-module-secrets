@@ -4,10 +4,6 @@ resource "null_resource" "dependencies" {
 
 data "aws_region" "current" {}
 
-# TODO Remove this comment if the data source above works
-# This policy allows access to ALL the Secrets Manager secrets. Although it would be better to restrict the access to 
-# only the secrets that are needed, this is not possible because of race conditions, as the secrets are created by the 
-# other modules of the DevOps Stack outside this module.
 data "aws_iam_policy_document" "secrets" {
   count = (var.aws_iam_role != null ? var.aws_iam_role.create_role : false) || (var.aws_iam_access_key != null ? var.aws_iam_access_key.create_iam_access_key : false) ? 1 : 0
 
@@ -19,10 +15,10 @@ data "aws_iam_policy_document" "secrets" {
       "secretsmanager:ListSecretVersionIds"
     ]
 
-    resources = [
-      resource.aws_secretsmanager_secret.grafana_admin_credentials.arn,
-      # TODO Add remaining secrets here when they are created
-    ]
+    # Specify the ARN of the secrets that the role can access. Since each secret is created by this module, we can 
+    # easily recover these ARNs from the attributes of each Terrafom resource.
+    resources = compact([for k, v in local.secrets_to_create : v != null ? resource.aws_secretsmanager_secret.secrets[k].arn : null])
+
     effect = "Allow"
   }
 }
@@ -31,7 +27,7 @@ resource "aws_iam_policy" "secrets" {
   count = (var.aws_iam_role != null ? var.aws_iam_role.create_role : false) || (var.aws_iam_access_key != null ? var.aws_iam_access_key.create_iam_access_key : false) ? 1 : 0
 
   name_prefix = "external-secrets-"
-  description = "External Secrets IAM policy for accessing the Secrets Manager secrets."
+  description = "External Secrets IAM policy for accessing the Secrets Manager secrets for the cluster named ${var.cluster_name}."
   policy      = data.aws_iam_policy_document.secrets[0].json
 
   tags = {
@@ -135,7 +131,7 @@ module "secrets" {
   helm_values            = concat(local.helm_values, var.helm_values)
   deep_merge_append_list = var.deep_merge_append_list
   app_autosync           = var.app_autosync
-  dependency_ids         = merge(var.dependency_ids, { "this" = resource.null_resource.this.id })
+  dependency_ids         = var.dependency_ids
 
   resources       = var.resources
   replicas        = var.replicas

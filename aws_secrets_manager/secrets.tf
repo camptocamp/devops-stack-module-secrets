@@ -1,4 +1,6 @@
-resource "random_id" "grafana_admin_credentials_suffix" {
+# This ID is required to avoid conflicts with the secrets names inside the same platform, in case there are multiple 
+# deployments inside the same platform.
+resource "random_id" "secrets_suffix" {
   byte_length = 8
 }
 
@@ -7,19 +9,29 @@ resource "random_password" "grafana_admin_password" {
   special = false
 }
 
-resource "aws_secretsmanager_secret" "grafana_admin_credentials" {
-  name = local.secrets_names.kube_prometheus_stack.grafana_admin_credentials
+resource "aws_secretsmanager_secret" "secrets" {
+  for_each = toset(local.secrets_for_each)
+
+  name = local.secrets_to_create[each.key].name
 
   tags = {
     "devops-stack" = "true"
+    "terraform"    = "true"
     "cluster"      = var.cluster_name
+  }
+
+  lifecycle {
+    ignore_changes = all # Ignore all changes after the bootstrap to allow the users to rotate the secrets manually.
   }
 }
 
-resource "aws_secretsmanager_secret_version" "grafana_admin_credentials" {
-  secret_id = resource.aws_secretsmanager_secret.grafana_admin_credentials.id
-  secret_string = jsonencode({
-    username = "admin"
-    password = resource.random_password.grafana_admin_password.result
-  })
+resource "aws_secretsmanager_secret_version" "secrets" {
+  for_each = toset(local.secrets_for_each)
+
+  secret_id     = resource.aws_secretsmanager_secret.secrets[each.key].id
+  secret_string = jsonencode(local.secrets_to_create[each.key].content)
+
+  lifecycle {
+    ignore_changes = all # Ignore all changes after the bootstrap to allow the users to rotate the secrets manually.
+  }
 }
