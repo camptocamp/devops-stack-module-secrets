@@ -2,7 +2,7 @@ resource "null_resource" "dependencies" {
   triggers = var.dependency_ids
 }
 
-resource "kubernetes_namespace" "secrets" {
+resource "kubernetes_namespace" "secrets_namespace" {
   metadata {
     name = "secrets"
     labels = {
@@ -12,13 +12,6 @@ resource "kubernetes_namespace" "secrets" {
 
   depends_on = [
     resource.null_resource.dependencies,
-  ]
-}
-
-resource "null_resource" "this" {
-  depends_on = [
-    resource.null_resource.dependencies,
-    resource.kubernetes_namespace.secrets,
   ]
 }
 
@@ -36,7 +29,7 @@ module "secrets" {
   helm_values            = concat(local.helm_values, var.helm_values)
   deep_merge_append_list = var.deep_merge_append_list
   app_autosync           = var.app_autosync
-  dependency_ids         = merge(var.dependency_ids, { "this" = resource.null_resource.this.id })
+  dependency_ids         = var.dependency_ids
 
   resources       = var.resources
   replicas        = var.replicas

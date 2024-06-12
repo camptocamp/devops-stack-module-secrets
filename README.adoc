@@ -13,7 +13,7 @@ The charts used by this module is shipped in this repository as well, in order t
 [cols="1,1,1,1",options="autowidth,header"]
 |===
 |Chart |Current Chart Version |Original Repository |Default Values
-|*External Secrets Operator* |*{external-secrets-chart-version}* |{external-secrets-original-repo-url}/tree/main/deploy/charts/external-secrets[Chart] |https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets/{{external-secrets-chart-version}?modal=values[`values.yaml`]
+|*External Secrets Operator* |*{external-secrets-chart-version}* |{external-secrets-original-repo-url}/tree/main/deploy/charts/external-secrets[Chart] |https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets/{external-secrets-chart-version}?modal=values[`values.yaml`]
 |*Reloader* |*{reloader-chart-version}* |{reloader-original-repo-url}tree/master/deployments/kubernetes/chart/reloader[Chart] |https://artifacthub.io/packages/helm/stakater/reloader/{reloader-chart-version}?modal=values[`values.yaml`]
 |===
 
