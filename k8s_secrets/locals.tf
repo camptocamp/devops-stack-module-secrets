@@ -20,6 +20,12 @@ locals {
         password = resource.random_password.grafana_admin_password.result
       }
     }
+    oidc_client_secret = {
+      name = "devops-stack-oidc-client-secret-${resource.random_id.secrets_suffix.hex}"
+      content = {
+        value = var.oidc_client_secret
+      }
+    }
     oauth2_proxy_cookie_secret = {
       name = "devops-stack-oauth2-proxy-cookie-secret-${resource.random_id.secrets_suffix.hex}"
       content = {
@@ -39,6 +45,7 @@ locals {
     var.metrics_storage_secret != null ? "metrics_storage_secret" : null,
     "grafana_admin_credentials",
     "oauth2_proxy_cookie_secret",
+    "oidc_client_secret",
   ])
 
   helm_values = [{
