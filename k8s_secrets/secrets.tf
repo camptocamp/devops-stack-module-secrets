@@ -10,6 +10,11 @@ resource "random_password" "grafana_admin_password" {
   special = false
 }
 
+resource "random_password" "oauth2_proxy_cookie_secret" {
+  length  = 32
+  special = false
+}
+
 resource "kubernetes_secret" "secrets" {
   for_each = toset(local.secrets_for_each)
 
