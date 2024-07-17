@@ -176,6 +176,7 @@ variable "auto_reload_all" {
 # variable "argocd_pipeline_token" {
 #   description = "Argo CD pipeline token to authenticate with the Argo CD API."
 #   type        = string
+#   nullable    = false
 #   sensitive = true
 # }
 
@@ -207,4 +208,11 @@ variable "metrics_storage_secret" {
   })
   default   = null
   sensitive = true
+}
+
+variable "oidc_client_secret" {
+  description = "OIDC client secret to authenticate with the OIDC provider."
+  type        = string
+  nullable    = false
+  sensitive   = true
 }
