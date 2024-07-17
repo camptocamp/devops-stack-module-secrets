@@ -13,6 +13,7 @@ output "secrets_names" {
     kube_prometheus_stack = {
       metrics_storage            = var.metrics_storage_secret != null ? local.secrets_to_create.metrics_storage_secret.name : null
       grafana_admin_credentials  = local.secrets_to_create.grafana_admin_credentials.name
+      oidc_client_secret         = local.secrets_to_create.oidc_client_secret.name
       oauth2_proxy_cookie_secret = local.secrets_to_create.oauth2_proxy_cookie_secret.name
     }
   }
