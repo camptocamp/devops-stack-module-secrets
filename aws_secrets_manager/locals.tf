@@ -20,6 +20,12 @@ locals {
         password = resource.random_password.grafana_admin_password.result
       }
     }
+    oauth2_proxy_cookie_secret = {
+      name = "devops-stack-oauth2-proxy-cookie-secret-${resource.random_id.secrets_suffix.hex}"
+      content = {
+        value = resource.random_password.oauth2_proxy_cookie_secret.result
+      }
+    }
 
     # TODO Add remaining secrets in this map
   }
@@ -30,7 +36,8 @@ locals {
   secrets_for_each = compact([
     var.logs_storage_secret != null ? "logs_storage_secret" : null,
     var.metrics_storage_secret != null ? "metrics_storage_secret" : null,
-    "grafana_admin_credentials"
+    "grafana_admin_credentials",
+    "oauth2_proxy_cookie_secret",
   ])
 
   helm_values = [{
