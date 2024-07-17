@@ -34,4 +34,10 @@ module "secrets" {
   resources       = var.resources
   replicas        = var.replicas
   auto_reload_all = var.auto_reload_all
+
+  # Although these variables are not used in the core module, they are propagated there only to maintain them as a 
+  # requirement when calling the variants.
+  logs_storage_secret    = var.logs_storage_secret
+  metrics_storage_secret = var.metrics_storage_secret
+  oidc_client_secret     = var.oidc_client_secret
 }
