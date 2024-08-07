@@ -1,8 +1,8 @@
 = devops-stack-module-secrets
 // Document attributes to replace along the document
 // Here you can define variables for something that keeps repeating along the text
-:external-secrets-chart-version: 0.9.16
-:reloader-chart-version: 1.0.83
+:external-secrets-chart-version: 0.10.0
+:reloader-chart-version: 1.0.119
 :external-secrets-original-repo-url: https://github.com/external-secrets/external-secrets
 :reloader-original-repo-url: https://github.com/stakater/Reloader
 
