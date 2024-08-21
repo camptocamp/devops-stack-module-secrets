@@ -26,6 +26,7 @@ resource "aws_secretsmanager_secret" "secrets" {
   }
 
   lifecycle {
+    # TODO Evaluate if only the tags should be ignored, in order to have a static secret name!
     ignore_changes = all # Ignore all changes after the bootstrap to allow the users to rotate the secrets manually.
   }
 }
