@@ -216,3 +216,17 @@ variable "oidc_client_secret" {
   nullable    = false
   sensitive   = true
 }
+
+variable "alertmanager_deadmanssnitch_url" {
+  description = "URL of a Dead Man's Snitch service Alertmanager should report to (by default this reporting is disabled)."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "alertmanager_slack_routes_api_urls" {
+  description = "List of Slack URLs you received when configuring a webhook integration. Should be passed as a set of strings in the format `name = `api_url`, where `name` should be the same value as the `name` attribute in the `alertmanager_slack_routes` variable of the kube-prometheus-stack module."
+  type        = set(string)
+  default     = null
+  sensitive   = true
+}
