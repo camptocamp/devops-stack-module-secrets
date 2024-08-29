@@ -7,7 +7,7 @@ locals {
           "deadmanssnitch-url" = var.alertmanager_deadmanssnitch_url
         } : null,
         var.alertmanager_slack_routes_api_urls != null ? {
-          for route in var.alertmanager_slack_routes_api_urls : format("slack-route-%s", route.key) => route.value
+          for k, v in var.alertmanager_slack_routes_api_urls : format("slack-route-%s", k) => v
         } : null
       )
     } : null
