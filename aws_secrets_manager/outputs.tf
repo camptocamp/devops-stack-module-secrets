@@ -5,16 +5,9 @@ output "id" {
 
 output "secrets_names" {
   description = "Name of the `ClusterSecretStore` used by the External Secrets Operator and the names of the secrets required by the DevOps Stack modules."
-  value = {
+  value = merge({
     cluster_secret_store_name = local.cluster_secret_store_name
-    loki_stack = {
-      logs_storage = var.logs_storage_secret != null ? local.secrets_to_create.logs_storage_secret.name : null
-    }
-    kube_prometheus_stack = {
-      grafana_admin_credentials  = local.secrets_to_create.grafana_admin_credentials.name
-      metrics_storage            = var.metrics_storage_secret != null ? local.secrets_to_create.metrics_storage_secret.name : null
-      oauth2_proxy_cookie_secret = local.secrets_to_create.oauth2_proxy_cookie_secret.name
-      oidc_client_secret         = local.secrets_to_create.oidc_client_secret.name
-    }
-  }
+    },
+    module.secrets_generator.secrets_names_without_secret_store
+  )
 }

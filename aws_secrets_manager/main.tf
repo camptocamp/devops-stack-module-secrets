@@ -17,7 +17,7 @@ data "aws_iam_policy_document" "secrets" {
 
     # Specify the ARN of the secrets that the role can access. Since each secret is created by this module, we can 
     # easily recover these ARNs from the attributes of each Terrafom resource.
-    resources = compact([for k, v in local.secrets_to_create : v != null ? resource.aws_secretsmanager_secret.secrets[k].arn : null])
+    resources = compact([for k, v in module.secrets_generator.secrets_to_create : v != null ? resource.aws_secretsmanager_secret.secrets[k].arn : null])
 
     effect = "Allow"
   }
@@ -136,10 +136,4 @@ module "secrets" {
   resources       = var.resources
   replicas        = var.replicas
   auto_reload_all = var.auto_reload_all
-
-  # Although these variables are not used in the core module, they are propagated there only to maintain them as a 
-  # requirement when calling the variants.
-  logs_storage_secret    = var.logs_storage_secret
-  metrics_storage_secret = var.metrics_storage_secret
-  oidc_client_secret     = var.oidc_client_secret
 }

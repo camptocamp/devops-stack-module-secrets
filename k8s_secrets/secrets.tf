@@ -1,25 +1,18 @@
-# This ID is required to avoid conflicts with the secrets names inside the same platform, in case we want to use new 
-# secrets created manually after the first deployment. This way we can have both versions simultaneously and migrate to 
-# the new secrets without any conflicts or race conditions.
-resource "random_id" "secrets_suffix" {
-  byte_length = 8
-}
+module "secrets_generator" {
+  source = "../modules/secrets_generator"
 
-resource "random_password" "grafana_admin_password" {
-  length  = 32
-  special = false
-}
-
-resource "random_password" "oauth2_proxy_cookie_secret" {
-  length  = 32
-  special = false
+  alertmanager_deadmanssnitch_url    = var.alertmanager_deadmanssnitch_url
+  alertmanager_slack_routes_api_urls = var.alertmanager_slack_routes_api_urls
+  logs_storage_secret                = var.logs_storage_secret
+  metrics_storage_secret             = var.metrics_storage_secret
+  oidc_client_secret                 = var.oidc_client_secret
 }
 
 resource "kubernetes_secret" "secrets" {
-  for_each = toset(local.secrets_for_each)
+  for_each = toset(module.secrets_generator.secrets_for_each)
 
   metadata {
-    name      = local.secrets_to_create[each.key].name
+    name      = module.secrets_generator.secrets_to_create[each.key].name
     namespace = "secrets"
     labels = {
       "devops-stack" = "true"
@@ -27,7 +20,7 @@ resource "kubernetes_secret" "secrets" {
     }
   }
 
-  data = local.secrets_to_create[each.key].content
+  data = module.secrets_generator.secrets_to_create[each.key].content
 
   depends_on = [
     resource.null_resource.dependencies,
@@ -35,6 +28,6 @@ resource "kubernetes_secret" "secrets" {
   ]
 
   lifecycle {
-    ignore_changes = all # Ignore all changes after the bootstrap to allow the users to rotate the secrets manually.
+    ignore_changes = [data] # Ignore all changes after the bootstrap to allow the users to rotate the secrets manually.
   }
 }
