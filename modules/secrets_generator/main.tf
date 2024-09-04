@@ -2,7 +2,7 @@
 # secrets created manually after the first deployment. This way we can have both versions simultaneously and migrate to 
 # the new secrets without any conflicts or race conditions.
 resource "random_id" "secrets_suffix" {
-  for_each = toset(local.secrets_for_each)
+  for_each = toset(local.secrets_keys)
 
   byte_length = 8
 }

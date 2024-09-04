@@ -9,9 +9,9 @@ module "secrets_generator" {
 }
 
 resource "aws_secretsmanager_secret" "secrets" {
-  for_each = toset(module.secrets_generator.secrets_for_each)
+  for_each = module.secrets_generator.secrets_to_create
 
-  name = module.secrets_generator.secrets_to_create[each.key].name
+  name = each.value.name
 
   tags = {
     "devops-stack" = "true"
@@ -25,10 +25,10 @@ resource "aws_secretsmanager_secret" "secrets" {
 }
 
 resource "aws_secretsmanager_secret_version" "secrets" {
-  for_each = toset(module.secrets_generator.secrets_for_each)
+  for_each = module.secrets_generator.secrets_to_create
 
   secret_id     = resource.aws_secretsmanager_secret.secrets[each.key].id
-  secret_string = jsonencode(module.secrets_generator.secrets_to_create[each.key].content)
+  secret_string = each.value.content != null ? jsonencode(each.value.content) : jsonencode({ secret = "empty" })
 
   lifecycle {
     ignore_changes = [secret_string] # Ignore all changes after the bootstrap to allow the users to rotate the secrets manually.
