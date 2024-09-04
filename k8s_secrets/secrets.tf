@@ -9,10 +9,10 @@ module "secrets_generator" {
 }
 
 resource "kubernetes_secret" "secrets" {
-  for_each = toset(module.secrets_generator.secrets_for_each)
+  for_each = module.secrets_generator.secrets_to_create
 
   metadata {
-    name      = module.secrets_generator.secrets_to_create[each.key].name
+    name      = each.value.name
     namespace = "secrets"
     labels = {
       "devops-stack" = "true"
@@ -20,7 +20,7 @@ resource "kubernetes_secret" "secrets" {
     }
   }
 
-  data = module.secrets_generator.secrets_to_create[each.key].content
+  data = each.value.content != null ? each.value.content : { secret = "empty" }
 
   depends_on = [
     resource.null_resource.dependencies,
