@@ -8,7 +8,10 @@ locals {
     "metrics_storage_secret",
     "grafana_admin_credentials",
     "oauth2_proxy_cookie_secret",
-    "oidc_client_secret"
+    "oidc_client_secret",
+    "thanos_redis_password"
+
+    # TODO Add remaining secrets in this list
   ]
 
   secrets_to_create = {
@@ -51,6 +54,12 @@ locals {
       name = "devops-stack-oidc-client-secret-${resource.random_id.secrets_suffix["oidc_client_secret"].hex}"
       content = {
         value = var.oidc_client_secret
+      }
+    }
+    thanos_redis_password = {
+      name = "devops-stack-thanos-redis-password-${resource.random_id.secrets_suffix["thanos_redis_password"].hex}"
+      content = {
+        value = resource.random_password.thanos_redis_password.result
       }
     }
 

@@ -17,5 +17,11 @@ output "secrets_names_without_secret_store" {
       oauth2_proxy_cookie_secret = local.secrets_to_create.oauth2_proxy_cookie_secret.name
       oidc_client_secret         = local.secrets_to_create.oidc_client_secret.name
     }
+    thanos = {
+      metrics_storage            = local.secrets_to_create.metrics_storage_secret.content != null ? local.secrets_to_create.metrics_storage_secret.name : null
+      oauth2_proxy_cookie_secret = local.secrets_to_create.oauth2_proxy_cookie_secret.name
+      oidc_client_secret         = local.secrets_to_create.oidc_client_secret.name
+      redis_password             = local.secrets_to_create.thanos_redis_password.name
+    }
   }
 }

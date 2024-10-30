@@ -16,3 +16,8 @@ resource "random_password" "oauth2_proxy_cookie_secret" {
   length  = 32
   special = false
 }
+
+resource "random_password" "thanos_redis_password" {
+  length  = 32
+  special = false
+}
