@@ -1,12 +1,11 @@
 = devops-stack-module-secrets
 // Document attributes to replace along the document
-// Here you can define variables for something that keeps repeating along the text
 :external-secrets-chart-version: 0.10.0
 :reloader-chart-version: 1.0.119
 :external-secrets-original-repo-url: https://github.com/external-secrets/external-secrets
 :reloader-original-repo-url: https://github.com/stakater/Reloader
 
-A https://devops-stack.io[DevOps Stack] module to deploy the External Secrets Operator.
+A https://devops-stack.io[DevOps Stack] module to deploy the https://external-secrets.io/v{external-secrets-chart-version}/[External Secrets Operator] and {reloader-original-repo-url}[Reloader].
 
 The charts used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions. 
 
@@ -17,184 +16,42 @@ The charts used by this module is shipped in this repository as well, in order t
 |*Reloader* |*{reloader-chart-version}* |{reloader-original-repo-url}tree/master/deployments/kubernetes/chart/reloader[Chart] |https://artifacthub.io/packages/helm/stakater/reloader/{reloader-chart-version}?modal=values[`values.yaml`]
 |===
 
+[WARNING]
+====
+The variants of the module contained on the subfolders `aws_secrets_manager`, `azure_key_vault` and `k8s_secrets` are not fully developed yet. They are a work in progress to properly manage the secrets for all the DevOps Stack modules themselves.
+
+Consequently, only the root module is meant to be used at the moment. This will allow you to have an External Secrets Operator and Reloader deployed on your cluster which you can then used by adding the necessary manifests and annotations to your clusters.
+
 // TODO From below here
 
 == Usage
 
-_Here you will show examples of how to call this module on your code. Note that the `depends_on` needs to be adapted to your use case._
-
-_You can start by giving a simple example and then show some others with increasing complexity and/or for specific use cases._
+This module can be declared by adding the following block on your Terraform configuration:
 
 [source,terraform]
 ----
-module "template" {
-  source = "git::https://github.com/camptocamp/devops-stack-module-template.git?ref=<RELEASE>"
+module "secrets" {
+  source = "git::https://github.com/camptocamp/devops-stack-module-secrets.git?ref=<RELEASE>"
 
-  cluster_name            = local.cluster_name
-  argocd_namespace        = local.argocd_namespace
+  cluster_name   = module.sks.cluster_name
+  base_domain    = module.sks.base_domain
+  argocd_project = module.sks.cluster_name
 
   dependency_ids = {
-    argocd = module.argocd_bootstrap.id
+    argocd = module.argocd.id
   }
 }
 ----
 
-=== Something Explained Better
-
-_If there is some part of the module's configuration that needs more specific explanations, such as a very particular output on which every other module depends on, maybe consider creating a subsection to improve readability._
-
-NOTE: _The AsciiDoc syntax provides a way to write admonitions such as this one, so use it if you think it is useful. The https://docs.antora.org/antora/latest/asciidoc/admonitions/[official documentation] for Antora Docs provides more examples._
-
 == Technical Reference
-
-_This section will contain the more technical details of the module. It is mainly generated automatically by Terraform Docs (everything that is between the comments `BEGIN_TF_DOCS` / `END_TF_DOCS`). However, it is recommended to, at the bare minimum, add a dependencies section to explain the reason on why this module could depend on another one from the DevOps Stack._
-
-_You can safely delete the content between the comments `BEGIN_TF_DOCS` / `END_TF_DOCS` and `BEGIN_TF_TABLES` / `END_TF_TABLES` when creating your on module._
 
 === Dependencies
 
-==== `module.argocd_bootstrap`
+==== `module.argocd.id`
 
-This module must be one of the first ones to be deployed and consequently it needs to be deployed after the module `argocd_bootstrap`.
+Obviously, the module depends on an already running Argo CD in the cluster in order for the application to be created.
 
 // BEGIN_TF_DOCS
-=== Requirements
-
-The following requirements are needed by this module:
-
-- [[requirement_argocd]] <<requirement_argocd,argocd>> (>= 5)
-
-- [[requirement_null]] <<requirement_null,null>> (>= 3)
-
-- [[requirement_utils]] <<requirement_utils,utils>> (>= 1)
-
-=== Providers
-
-The following providers are used by this module:
-
-- [[provider_null]] <<provider_null,null>> (>= 3)
-
-- [[provider_utils]] <<provider_utils,utils>> (>= 1)
-
-- [[provider_argocd]] <<provider_argocd,argocd>> (>= 5)
-
-=== Resources
-
-The following resources are used by this module:
-
-- https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/application[argocd_application.this] (resource)
-- https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/project[argocd_project.this] (resource)
-- https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.dependencies] (resource)
-- https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.this] (resource)
-- https://registry.terraform.io/providers/cloudposse/utils/latest/docs/data-sources/deep_merge_yaml[utils_deep_merge_yaml.values] (data source)
-
-=== Required Inputs
-
-The following input variables are required:
-
-==== [[input_cluster_name]] <<input_cluster_name,cluster_name>>
-
-Description: Name given to the cluster. Value used for naming some the resources created by the module.
-
-Type: `string`
-
-==== [[input_base_domain]] <<input_base_domain,base_domain>>
-
-Description: Base domain of the cluster. Value used for the ingress' URL of the application.
-
-Type: `string`
-
-=== Optional Inputs
-
-The following input variables are optional (have default values):
-
-==== [[input_argocd_project]] <<input_argocd_project,argocd_project>>
-
-Description: Name of the Argo CD AppProject where the Application should be created. If not set, the Application will be created in a new AppProject only for this Application.
-
-Type: `string`
-
-Default: `null`
-
-==== [[input_argocd_labels]] <<input_argocd_labels,argocd_labels>>
-
-Description: Labels to attach to the Argo CD Application resource.
-
-Type: `map(string)`
-
-Default: `{}`
-
-==== [[input_destination_cluster]] <<input_destination_cluster,destination_cluster>>
-
-Description: Destination cluster where the application should be deployed.
-
-Type: `string`
-
-Default: `"in-cluster"`
-
-==== [[input_target_revision]] <<input_target_revision,target_revision>>
-
-Description: Override of target revision of the application chart.
-
-Type: `string`
-
-Default: `"v1.0.0"`
-
-==== [[input_cluster_issuer]] <<input_cluster_issuer,cluster_issuer>>
-
-Description: SSL certificate issuer to use. Usually you would configure this value as `letsencrypt-staging` or `letsencrypt-prod` on your root `*.tf` files.
-
-Type: `string`
-
-Default: `"selfsigned-issuer"`
-
-==== [[input_helm_values]] <<input_helm_values,helm_values>>
-
-Description: Helm chart value overrides. They should be passed as a list of HCL structures.
-
-Type: `any`
-
-Default: `[]`
-
-==== [[input_app_autosync]] <<input_app_autosync,app_autosync>>
-
-Description: Automated sync options for the Argo CD Application resource.
-
-Type:
-[source,hcl]
-----
-object({
-    allow_empty = optional(bool)
-    prune       = optional(bool)
-    self_heal   = optional(bool)
-  })
-----
-
-Default:
-[source,json]
-----
-{
-  "allow_empty": false,
-  "prune": true,
-  "self_heal": true
-}
-----
-
-==== [[input_dependency_ids]] <<input_dependency_ids,dependency_ids>>
-
-Description: IDs of the other modules on which this module depends on.
-
-Type: `map(string)`
-
-Default: `{}`
-
-=== Outputs
-
-The following outputs are exported:
-
-==== [[output_id]] <<output_id,id>>
-
-Description: ID to pass other modules in order to refer to this module as a dependency.
 // END_TF_DOCS
 
 === Reference in table format 
@@ -203,131 +60,5 @@ Description: ID to pass other modules in order to refer to this module as a depe
 [%collapsible]
 ====
 // BEGIN_TF_TABLES
-= Requirements
-
-[cols="a,a",options="header,autowidth"]
-|===
-|Name |Version
-|[[requirement_argocd]] <<requirement_argocd,argocd>> |>= 5
-|[[requirement_null]] <<requirement_null,null>> |>= 3
-|[[requirement_utils]] <<requirement_utils,utils>> |>= 1
-|===
-
-= Providers
-
-[cols="a,a",options="header,autowidth"]
-|===
-|Name |Version
-|[[provider_null]] <<provider_null,null>> |>= 3
-|[[provider_argocd]] <<provider_argocd,argocd>> |>= 5
-|[[provider_utils]] <<provider_utils,utils>> |>= 1
-|===
-
-= Resources
-
-[cols="a,a",options="header,autowidth"]
-|===
-|Name |Type
-|https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/application[argocd_application.this] |resource
-|https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/project[argocd_project.this] |resource
-|https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.dependencies] |resource
-|https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.this] |resource
-|https://registry.terraform.io/providers/cloudposse/utils/latest/docs/data-sources/deep_merge_yaml[utils_deep_merge_yaml.values] |data source
-|===
-
-= Inputs
-
-[cols="a,a,a,a,a",options="header,autowidth"]
-|===
-|Name |Description |Type |Default |Required
-|[[input_cluster_name]] <<input_cluster_name,cluster_name>>
-|Name given to the cluster. Value used for naming some the resources created by the module.
-|`string`
-|n/a
-|yes
-
-|[[input_base_domain]] <<input_base_domain,base_domain>>
-|Base domain of the cluster. Value used for the ingress' URL of the application.
-|`string`
-|n/a
-|yes
-
-|[[input_argocd_project]] <<input_argocd_project,argocd_project>>
-|Name of the Argo CD AppProject where the Application should be created. If not set, the Application will be created in a new AppProject only for this Application.
-|`string`
-|`null`
-|no
-
-|[[input_argocd_labels]] <<input_argocd_labels,argocd_labels>>
-|Labels to attach to the Argo CD Application resource.
-|`map(string)`
-|`{}`
-|no
-
-|[[input_destination_cluster]] <<input_destination_cluster,destination_cluster>>
-|Destination cluster where the application should be deployed.
-|`string`
-|`"in-cluster"`
-|no
-
-|[[input_target_revision]] <<input_target_revision,target_revision>>
-|Override of target revision of the application chart.
-|`string`
-|`"v1.0.0"`
-|no
-
-|[[input_cluster_issuer]] <<input_cluster_issuer,cluster_issuer>>
-|SSL certificate issuer to use. Usually you would configure this value as `letsencrypt-staging` or `letsencrypt-prod` on your root `*.tf` files.
-|`string`
-|`"selfsigned-issuer"`
-|no
-
-|[[input_helm_values]] <<input_helm_values,helm_values>>
-|Helm chart value overrides. They should be passed as a list of HCL structures.
-|`any`
-|`[]`
-|no
-
-|[[input_app_autosync]] <<input_app_autosync,app_autosync>>
-|Automated sync options for the Argo CD Application resource.
-|
-
-[source]
-----
-object({
-    allow_empty = optional(bool)
-    prune       = optional(bool)
-    self_heal   = optional(bool)
-  })
-----
-
-|
-
-[source]
-----
-{
-  "allow_empty": false,
-  "prune": true,
-  "self_heal": true
-}
-----
-
-|no
-
-|[[input_dependency_ids]] <<input_dependency_ids,dependency_ids>>
-|IDs of the other modules on which this module depends on.
-|`map(string)`
-|`{}`
-|no
-
-|===
-
-= Outputs
-
-[cols="a,a",options="header,autowidth"]
-|===
-|Name |Description
-|[[output_id]] <<output_id,id>> |ID to pass other modules in order to refer to this module as a dependency.
-|===
 // END_TF_TABLES
 ====
