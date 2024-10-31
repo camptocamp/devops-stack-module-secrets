@@ -52,6 +52,249 @@ module "secrets" {
 Obviously, the module depends on an already running Argo CD in the cluster in order for the application to be created.
 
 // BEGIN_TF_DOCS
+=== Requirements
+
+The following requirements are needed by this module:
+
+- [[requirement_argocd]] <<requirement_argocd,argocd>> (>= 6)
+
+- [[requirement_null]] <<requirement_null,null>> (>= 3)
+
+- [[requirement_utils]] <<requirement_utils,utils>> (>= 1)
+
+=== Providers
+
+The following providers are used by this module:
+
+- [[provider_argocd]] <<provider_argocd,argocd>> (>= 6)
+
+- [[provider_utils]] <<provider_utils,utils>> (>= 1)
+
+- [[provider_null]] <<provider_null,null>> (>= 3)
+
+=== Resources
+
+The following resources are used by this module:
+
+- https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs/resources/application[argocd_application.this] (resource)
+- https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs/resources/project[argocd_project.this] (resource)
+- https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.dependencies] (resource)
+- https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.this] (resource)
+- https://registry.terraform.io/providers/cloudposse/utils/latest/docs/data-sources/deep_merge_yaml[utils_deep_merge_yaml.values] (data source)
+
+=== Required Inputs
+
+The following input variables are required:
+
+==== [[input_cluster_name]] <<input_cluster_name,cluster_name>>
+
+Description: Name given to the cluster. Value used for naming some the resources created by the module.
+
+Type: `string`
+
+==== [[input_base_domain]] <<input_base_domain,base_domain>>
+
+Description: Base domain of the cluster. Value used for the ingress' URL of the application.
+
+Type: `string`
+
+=== Optional Inputs
+
+The following input variables are optional (have default values):
+
+==== [[input_argocd_project]] <<input_argocd_project,argocd_project>>
+
+Description: Name of the Argo CD AppProject where the Application should be created. If not set, the Application will be created in a new AppProject only for this Application.
+
+Type: `string`
+
+Default: `null`
+
+==== [[input_argocd_labels]] <<input_argocd_labels,argocd_labels>>
+
+Description: Labels to attach to the Argo CD Application resource.
+
+Type: `map(string)`
+
+Default: `{}`
+
+==== [[input_destination_cluster]] <<input_destination_cluster,destination_cluster>>
+
+Description: Destination cluster where the application should be deployed.
+
+Type: `string`
+
+Default: `"in-cluster"`
+
+==== [[input_target_revision]] <<input_target_revision,target_revision>>
+
+Description: Override of target revision of the application chart.
+
+Type: `string`
+
+Default: `"v1.0.0"`
+
+==== [[input_enable_service_monitor]] <<input_enable_service_monitor,enable_service_monitor>>
+
+Description: Enable Prometheus ServiceMonitor in the Helm chart.
+
+Type: `bool`
+
+Default: `true`
+
+==== [[input_cluster_issuer]] <<input_cluster_issuer,cluster_issuer>>
+
+Description: SSL certificate issuer to use. Usually you would configure this value as `letsencrypt-staging` or `letsencrypt-prod` on your root `*.tf` files.
+
+Type: `string`
+
+Default: `"selfsigned-issuer"`
+
+==== [[input_helm_values]] <<input_helm_values,helm_values>>
+
+Description: Helm chart value overrides. They should be passed as a list of HCL structures.
+
+Type: `any`
+
+Default: `[]`
+
+==== [[input_deep_merge_append_list]] <<input_deep_merge_append_list,deep_merge_append_list>>
+
+Description: A boolean flag to enable/disable appending lists instead of overwriting them.
+
+Type: `bool`
+
+Default: `false`
+
+==== [[input_app_autosync]] <<input_app_autosync,app_autosync>>
+
+Description: Automated sync options for the Argo CD Application resource.
+
+Type:
+[source,hcl]
+----
+object({
+    allow_empty = optional(bool)
+    prune       = optional(bool)
+    self_heal   = optional(bool)
+  })
+----
+
+Default:
+[source,json]
+----
+{
+  "allow_empty": false,
+  "prune": true,
+  "self_heal": true
+}
+----
+
+==== [[input_dependency_ids]] <<input_dependency_ids,dependency_ids>>
+
+Description: IDs of the other modules on which this module depends on.
+
+Type: `map(string)`
+
+Default: `{}`
+
+==== [[input_resources]] <<input_resources,resources>>
+
+Description: Resource limits and requests for External Secrets's and Reloader's components. Follow the style on https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/[official documentation] to understand the format of the values.
+
+IMPORTANT: These are not production values. You should always adjust them to your needs.
+
+Type:
+[source,hcl]
+----
+object({
+
+    external_secrets_operator = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    external_secrets_webhook = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    external_secrets_cert_controller = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    reloader = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+  })
+----
+
+Default: `{}`
+
+==== [[input_replicas]] <<input_replicas,replicas>>
+
+Description: Number of replicas for the External Secrets and Reloader components.
+
+Type:
+[source,hcl]
+----
+object({
+    external_secrets = number
+    reloader         = number
+  })
+----
+
+Default:
+[source,json]
+----
+{
+  "external_secrets": 1,
+  "reloader": 1
+}
+----
+
+==== [[input_auto_reload_all]] <<input_auto_reload_all,auto_reload_all>>
+
+Description: TODO
+
+Type: `bool`
+
+Default: `false`
+
+=== Outputs
+
+The following outputs are exported:
+
+==== [[output_id]] <<output_id,id>>
+
+Description: ID to pass other modules in order to refer to this module as a dependency.
 // END_TF_DOCS
 
 === Reference in table format 
@@ -60,5 +303,234 @@ Obviously, the module depends on an already running Argo CD in the cluster in or
 [%collapsible]
 ====
 // BEGIN_TF_TABLES
+= Requirements
+
+[cols="a,a",options="header,autowidth"]
+|===
+|Name |Version
+|[[requirement_argocd]] <<requirement_argocd,argocd>> |>= 6
+|[[requirement_null]] <<requirement_null,null>> |>= 3
+|[[requirement_utils]] <<requirement_utils,utils>> |>= 1
+|===
+
+= Providers
+
+[cols="a,a",options="header,autowidth"]
+|===
+|Name |Version
+|[[provider_null]] <<provider_null,null>> |>= 3
+|[[provider_argocd]] <<provider_argocd,argocd>> |>= 6
+|[[provider_utils]] <<provider_utils,utils>> |>= 1
+|===
+
+= Resources
+
+[cols="a,a",options="header,autowidth"]
+|===
+|Name |Type
+|https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs/resources/application[argocd_application.this] |resource
+|https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs/resources/project[argocd_project.this] |resource
+|https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.dependencies] |resource
+|https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.this] |resource
+|https://registry.terraform.io/providers/cloudposse/utils/latest/docs/data-sources/deep_merge_yaml[utils_deep_merge_yaml.values] |data source
+|===
+
+= Inputs
+
+[cols="a,a,a,a,a",options="header,autowidth"]
+|===
+|Name |Description |Type |Default |Required
+|[[input_cluster_name]] <<input_cluster_name,cluster_name>>
+|Name given to the cluster. Value used for naming some the resources created by the module.
+|`string`
+|n/a
+|yes
+
+|[[input_base_domain]] <<input_base_domain,base_domain>>
+|Base domain of the cluster. Value used for the ingress' URL of the application.
+|`string`
+|n/a
+|yes
+
+|[[input_argocd_project]] <<input_argocd_project,argocd_project>>
+|Name of the Argo CD AppProject where the Application should be created. If not set, the Application will be created in a new AppProject only for this Application.
+|`string`
+|`null`
+|no
+
+|[[input_argocd_labels]] <<input_argocd_labels,argocd_labels>>
+|Labels to attach to the Argo CD Application resource.
+|`map(string)`
+|`{}`
+|no
+
+|[[input_destination_cluster]] <<input_destination_cluster,destination_cluster>>
+|Destination cluster where the application should be deployed.
+|`string`
+|`"in-cluster"`
+|no
+
+|[[input_target_revision]] <<input_target_revision,target_revision>>
+|Override of target revision of the application chart.
+|`string`
+|`"v1.0.0"`
+|no
+
+|[[input_enable_service_monitor]] <<input_enable_service_monitor,enable_service_monitor>>
+|Enable Prometheus ServiceMonitor in the Helm chart.
+|`bool`
+|`true`
+|no
+
+|[[input_cluster_issuer]] <<input_cluster_issuer,cluster_issuer>>
+|SSL certificate issuer to use. Usually you would configure this value as `letsencrypt-staging` or `letsencrypt-prod` on your root `*.tf` files.
+|`string`
+|`"selfsigned-issuer"`
+|no
+
+|[[input_helm_values]] <<input_helm_values,helm_values>>
+|Helm chart value overrides. They should be passed as a list of HCL structures.
+|`any`
+|`[]`
+|no
+
+|[[input_deep_merge_append_list]] <<input_deep_merge_append_list,deep_merge_append_list>>
+|A boolean flag to enable/disable appending lists instead of overwriting them.
+|`bool`
+|`false`
+|no
+
+|[[input_app_autosync]] <<input_app_autosync,app_autosync>>
+|Automated sync options for the Argo CD Application resource.
+|
+
+[source]
+----
+object({
+    allow_empty = optional(bool)
+    prune       = optional(bool)
+    self_heal   = optional(bool)
+  })
+----
+
+|
+
+[source]
+----
+{
+  "allow_empty": false,
+  "prune": true,
+  "self_heal": true
+}
+----
+
+|no
+
+|[[input_dependency_ids]] <<input_dependency_ids,dependency_ids>>
+|IDs of the other modules on which this module depends on.
+|`map(string)`
+|`{}`
+|no
+
+|[[input_resources]] <<input_resources,resources>>
+|Resource limits and requests for External Secrets's and Reloader's components. Follow the style on https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/[official documentation] to understand the format of the values.
+
+IMPORTANT: These are not production values. You should always adjust them to your needs.
+
+|
+
+[source]
+----
+object({
+
+    external_secrets_operator = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    external_secrets_webhook = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    external_secrets_cert_controller = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    reloader = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+  })
+----
+
+|`{}`
+|no
+
+|[[input_replicas]] <<input_replicas,replicas>>
+|Number of replicas for the External Secrets and Reloader components.
+|
+
+[source]
+----
+object({
+    external_secrets = number
+    reloader         = number
+  })
+----
+
+|
+
+[source]
+----
+{
+  "external_secrets": 1,
+  "reloader": 1
+}
+----
+
+|no
+
+|[[input_auto_reload_all]] <<input_auto_reload_all,auto_reload_all>>
+|TODO
+|`bool`
+|`false`
+|no
+
+|===
+
+= Outputs
+
+[cols="a,a",options="header,autowidth"]
+|===
+|Name |Description
+|[[output_id]] <<output_id,id>> |ID to pass other modules in order to refer to this module as a dependency.
+|===
 // END_TF_TABLES
 ====
