@@ -21,8 +21,7 @@ The charts used by this module is shipped in this repository as well, in order t
 The variants of the module contained on the subfolders `aws_secrets_manager`, `azure_key_vault` and `k8s_secrets` are not fully developed yet. They are a work in progress to properly manage the secrets for all the DevOps Stack modules themselves.
 
 Consequently, only the root module is meant to be used at the moment. This will allow you to have an External Secrets Operator and Reloader deployed on your cluster which you can then used by adding the necessary manifests and annotations to your clusters.
-
-// TODO From below here
+====
 
 == Usage
 
