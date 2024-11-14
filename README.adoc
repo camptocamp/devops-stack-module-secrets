@@ -74,22 +74,6 @@ The following resources are used by this module:
 - https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.this] (resource)
 - https://registry.terraform.io/providers/cloudposse/utils/latest/docs/data-sources/deep_merge_yaml[utils_deep_merge_yaml.values] (data source)
 
-=== Required Inputs
-
-The following input variables are required:
-
-==== [[input_cluster_name]] <<input_cluster_name,cluster_name>>
-
-Description: Name given to the cluster. Value used for naming some the resources created by the module.
-
-Type: `string`
-
-==== [[input_base_domain]] <<input_base_domain,base_domain>>
-
-Description: Base domain of the cluster. Value used for the ingress' URL of the application.
-
-Type: `string`
-
 === Optional Inputs
 
 The following input variables are optional (have default values):
@@ -133,14 +117,6 @@ Description: Enable Prometheus ServiceMonitor in the Helm chart.
 Type: `bool`
 
 Default: `true`
-
-==== [[input_cluster_issuer]] <<input_cluster_issuer,cluster_issuer>>
-
-Description: SSL certificate issuer to use. Usually you would configure this value as `letsencrypt-staging` or `letsencrypt-prod` on your root `*.tf` files.
-
-Type: `string`
-
-Default: `"selfsigned-issuer"`
 
 ==== [[input_helm_values]] <<input_helm_values,helm_values>>
 
@@ -274,7 +250,9 @@ Default:
 
 ==== [[input_auto_reload_all]] <<input_auto_reload_all,auto_reload_all>>
 
-Description: TODO
+Description: Boolean to enable auto reloading for all resources.  
+
+In this case, all resources that do not have the auto annotation (or its typed version) set to "false", will be reloaded automatically when their ConfigMaps or Secrets are updated. Notice that setting the auto annotation to an undefined value counts as false as-well. " # TOD
 
 Type: `bool`
 
@@ -310,9 +288,9 @@ Description: ID to pass other modules in order to refer to this module as a depe
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Version
+|[[provider_null]] <<provider_null,null>> |>= 3
 |[[provider_argocd]] <<provider_argocd,argocd>> |>= 6
 |[[provider_utils]] <<provider_utils,utils>> |>= 1
-|[[provider_null]] <<provider_null,null>> |>= 3
 |===
 
 = Resources
@@ -332,18 +310,6 @@ Description: ID to pass other modules in order to refer to this module as a depe
 [cols="a,a,a,a,a",options="header,autowidth"]
 |===
 |Name |Description |Type |Default |Required
-|[[input_cluster_name]] <<input_cluster_name,cluster_name>>
-|Name given to the cluster. Value used for naming some the resources created by the module.
-|`string`
-|n/a
-|yes
-
-|[[input_base_domain]] <<input_base_domain,base_domain>>
-|Base domain of the cluster. Value used for the ingress' URL of the application.
-|`string`
-|n/a
-|yes
-
 |[[input_argocd_project]] <<input_argocd_project,argocd_project>>
 |Name of the Argo CD AppProject where the Application should be created. If not set, the Application will be created in a new AppProject only for this Application.
 |`string`
@@ -372,12 +338,6 @@ Description: ID to pass other modules in order to refer to this module as a depe
 |Enable Prometheus ServiceMonitor in the Helm chart.
 |`bool`
 |`true`
-|no
-
-|[[input_cluster_issuer]] <<input_cluster_issuer,cluster_issuer>>
-|SSL certificate issuer to use. Usually you would configure this value as `letsencrypt-staging` or `letsencrypt-prod` on your root `*.tf` files.
-|`string`
-|`"selfsigned-issuer"`
 |no
 
 |[[input_helm_values]] <<input_helm_values,helm_values>>
@@ -510,7 +470,10 @@ object({
 |no
 
 |[[input_auto_reload_all]] <<input_auto_reload_all,auto_reload_all>>
-|TODO
+|Boolean to enable auto reloading for all resources.
+    
+In this case, all resources that do not have the auto annotation (or its typed version) set to "false", will be reloaded automatically when their ConfigMaps or Secrets are updated. Notice that setting the auto annotation to an undefined value counts as false as-well. " # TOD
+
 |`bool`
 |`false`
 |no
