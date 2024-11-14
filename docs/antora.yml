@@ -1,6 +1,6 @@
 ---
-name: "template"
-title: "Template Module"
+name: "secrets"
+title: "Secrets Module"
 version: true
 start_page: README.adoc
 nav:

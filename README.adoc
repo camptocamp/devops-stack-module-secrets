@@ -1,64 +1,54 @@
-= devops-stack-module-template
+= devops-stack-module-secrets
 // Document attributes to replace along the document
-// Here you can define variables for something that keeps repeating along the text
-:CHART-DEPENDENCY-1-NAME-chart-version: 1.2.3
-:CHART-DEPENDENCY-2-NAME-chart-version: 1.2.3
-:original-repo-url: https://github.com/path/to/some/repository
+:external-secrets-chart-version: 0.10.0
+:reloader-chart-version: 1.0.119
+:external-secrets-original-repo-url: https://github.com/external-secrets/external-secrets
+:reloader-original-repo-url: https://github.com/stakater/Reloader
 
-A https://devops-stack.io[DevOps Stack] module to deploy *_something_*.
+A https://devops-stack.io[DevOps Stack] module to deploy the https://external-secrets.io/v{external-secrets-chart-version}/[External Secrets Operator] and {reloader-original-repo-url}[Reloader].
 
-The *_something_* chart used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions. 
+The charts used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions. 
 
-[cols="1,1,1",options="autowidth,header"]
+[cols="1,1,1,1",options="autowidth,header"]
 |===
-|Current Chart Version |Original Repository |Default Values
-|*{CHART-DEPENDENCY-1-NAME-chart-version}* |{original-repo-url}/subpath/to/the/chart[Chart] |{original-repo-url}/subpath/to/the/values.yaml[`values.yaml`] (_here you can also use artifacthub.io_)
+|Chart |Current Chart Version |Original Repository |Default Values
+|*External Secrets Operator* |*{external-secrets-chart-version}* |{external-secrets-original-repo-url}/tree/main/deploy/charts/external-secrets[Chart] |https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets/{external-secrets-chart-version}?modal=values[`values.yaml`]
+|*Reloader* |*{reloader-chart-version}* |{reloader-original-repo-url}tree/master/deployments/kubernetes/chart/reloader[Chart] |https://artifacthub.io/packages/helm/stakater/reloader/{reloader-chart-version}?modal=values[`values.yaml`]
 |===
 
 == Usage
 
-_Here you will show examples of how to call this module on your code. Note that the `depends_on` needs to be adapted to your use case._
-
-_You can start by giving a simple example and then show some others with increasing complexity and/or for specific use cases._
+This module can be declared by adding the following block on your Terraform configuration:
 
 [source,terraform]
 ----
-module "template" {
-  source = "git::https://github.com/camptocamp/devops-stack-module-template.git?ref=<RELEASE>"
+module "secrets" {
+  source = "git::https://github.com/camptocamp/devops-stack-module-secrets.git?ref=<RELEASE>"
 
-  cluster_name            = local.cluster_name
-  argocd_namespace        = local.argocd_namespace
+  cluster_name   = local.cluster_name
+  base_domain    = local.base_domain
+  argocd_project = local.cluster_name
 
   dependency_ids = {
-    argocd = module.argocd_bootstrap.id
+    argocd = module.argocd.id
   }
 }
 ----
 
-=== Something Explained Better
-
-_If there is some part of the module's configuration that needs more specific explanations, such as a very particular output on which every other module depends on, maybe consider creating a subsection to improve readability._
-
-NOTE: _The AsciiDoc syntax provides a way to write admonitions such as this one, so use it if you think it is useful. The https://docs.antora.org/antora/latest/asciidoc/admonitions/[official documentation] for Antora Docs provides more examples._
-
 == Technical Reference
-
-_This section will contain the more technical details of the module. It is mainly generated automatically by Terraform Docs (everything that is between the comments `BEGIN_TF_DOCS` / `END_TF_DOCS`). However, it is recommended to, at the bare minimum, add a dependencies section to explain the reason on why this module could depend on another one from the DevOps Stack._
-
-_You can safely delete the content between the comments `BEGIN_TF_DOCS` / `END_TF_DOCS` and `BEGIN_TF_TABLES` / `END_TF_TABLES` when creating your on module._
 
 === Dependencies
 
-==== `module.argocd_bootstrap`
+==== `module.argocd.id`
 
-This module must be one of the first ones to be deployed and consequently it needs to be deployed after the module `argocd_bootstrap`.
+Obviously, the module depends on an already running Argo CD in the cluster in order for the application to be created.
 
 // BEGIN_TF_DOCS
 === Requirements
 
 The following requirements are needed by this module:
 
-- [[requirement_argocd]] <<requirement_argocd,argocd>> (>= 5)
+- [[requirement_argocd]] <<requirement_argocd,argocd>> (>= 6)
 
 - [[requirement_null]] <<requirement_null,null>> (>= 3)
 
@@ -70,35 +60,19 @@ The following providers are used by this module:
 
 - [[provider_null]] <<provider_null,null>> (>= 3)
 
-- [[provider_utils]] <<provider_utils,utils>> (>= 1)
+- [[provider_argocd]] <<provider_argocd,argocd>> (>= 6)
 
-- [[provider_argocd]] <<provider_argocd,argocd>> (>= 5)
+- [[provider_utils]] <<provider_utils,utils>> (>= 1)
 
 === Resources
 
 The following resources are used by this module:
 
-- https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/application[argocd_application.this] (resource)
-- https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/project[argocd_project.this] (resource)
+- https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs/resources/application[argocd_application.this] (resource)
+- https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs/resources/project[argocd_project.this] (resource)
 - https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.dependencies] (resource)
 - https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.this] (resource)
 - https://registry.terraform.io/providers/cloudposse/utils/latest/docs/data-sources/deep_merge_yaml[utils_deep_merge_yaml.values] (data source)
-
-=== Required Inputs
-
-The following input variables are required:
-
-==== [[input_cluster_name]] <<input_cluster_name,cluster_name>>
-
-Description: Name given to the cluster. Value used for naming some the resources created by the module.
-
-Type: `string`
-
-==== [[input_base_domain]] <<input_base_domain,base_domain>>
-
-Description: Base domain of the cluster. Value used for the ingress' URL of the application.
-
-Type: `string`
 
 === Optional Inputs
 
@@ -136,13 +110,13 @@ Type: `string`
 
 Default: `"v1.0.0"`
 
-==== [[input_cluster_issuer]] <<input_cluster_issuer,cluster_issuer>>
+==== [[input_enable_service_monitor]] <<input_enable_service_monitor,enable_service_monitor>>
 
-Description: SSL certificate issuer to use. Usually you would configure this value as `letsencrypt-staging` or `letsencrypt-prod` on your root `*.tf` files.
+Description: Enable Prometheus ServiceMonitor in the Helm chart.
 
-Type: `string`
+Type: `bool`
 
-Default: `"selfsigned-issuer"`
+Default: `true`
 
 ==== [[input_helm_values]] <<input_helm_values,helm_values>>
 
@@ -151,6 +125,14 @@ Description: Helm chart value overrides. They should be passed as a list of HCL 
 Type: `any`
 
 Default: `[]`
+
+==== [[input_deep_merge_append_list]] <<input_deep_merge_append_list,deep_merge_append_list>>
+
+Description: A boolean flag to enable/disable appending lists instead of overwriting them.
+
+Type: `bool`
+
+Default: `false`
 
 ==== [[input_app_autosync]] <<input_app_autosync,app_autosync>>
 
@@ -184,6 +166,98 @@ Type: `map(string)`
 
 Default: `{}`
 
+==== [[input_resources]] <<input_resources,resources>>
+
+Description: Resource limits and requests for External Secrets's and Reloader's components. Follow the style on https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/[official documentation] to understand the format of the values.
+
+IMPORTANT: These are not production values. You should always adjust them to your needs.
+
+Type:
+[source,hcl]
+----
+object({
+
+    external_secrets_operator = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    external_secrets_webhook = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    external_secrets_cert_controller = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    reloader = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+  })
+----
+
+Default: `{}`
+
+==== [[input_replicas]] <<input_replicas,replicas>>
+
+Description: Number of replicas for the External Secrets and Reloader components.
+
+Type:
+[source,hcl]
+----
+object({
+    external_secrets = number
+    reloader         = number
+  })
+----
+
+Default:
+[source,json]
+----
+{
+  "external_secrets": 1,
+  "reloader": 1
+}
+----
+
+==== [[input_auto_reload_all]] <<input_auto_reload_all,auto_reload_all>>
+
+Description: Boolean to enable auto reloading for all resources.  
+
+In this case, all resources that do not have the auto annotation (or its typed version) set to "false", will be reloaded automatically when their ConfigMaps or Secrets are updated. Notice that setting the auto annotation to an undefined value counts as false as-well. " # TOD
+
+Type: `bool`
+
+Default: `false`
+
 === Outputs
 
 The following outputs are exported:
@@ -204,7 +278,7 @@ Description: ID to pass other modules in order to refer to this module as a depe
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Version
-|[[requirement_argocd]] <<requirement_argocd,argocd>> |>= 5
+|[[requirement_argocd]] <<requirement_argocd,argocd>> |>= 6
 |[[requirement_null]] <<requirement_null,null>> |>= 3
 |[[requirement_utils]] <<requirement_utils,utils>> |>= 1
 |===
@@ -215,7 +289,7 @@ Description: ID to pass other modules in order to refer to this module as a depe
 |===
 |Name |Version
 |[[provider_null]] <<provider_null,null>> |>= 3
-|[[provider_argocd]] <<provider_argocd,argocd>> |>= 5
+|[[provider_argocd]] <<provider_argocd,argocd>> |>= 6
 |[[provider_utils]] <<provider_utils,utils>> |>= 1
 |===
 
@@ -224,8 +298,8 @@ Description: ID to pass other modules in order to refer to this module as a depe
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Type
-|https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/application[argocd_application.this] |resource
-|https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/project[argocd_project.this] |resource
+|https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs/resources/application[argocd_application.this] |resource
+|https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs/resources/project[argocd_project.this] |resource
 |https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.dependencies] |resource
 |https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.this] |resource
 |https://registry.terraform.io/providers/cloudposse/utils/latest/docs/data-sources/deep_merge_yaml[utils_deep_merge_yaml.values] |data source
@@ -236,18 +310,6 @@ Description: ID to pass other modules in order to refer to this module as a depe
 [cols="a,a,a,a,a",options="header,autowidth"]
 |===
 |Name |Description |Type |Default |Required
-|[[input_cluster_name]] <<input_cluster_name,cluster_name>>
-|Name given to the cluster. Value used for naming some the resources created by the module.
-|`string`
-|n/a
-|yes
-
-|[[input_base_domain]] <<input_base_domain,base_domain>>
-|Base domain of the cluster. Value used for the ingress' URL of the application.
-|`string`
-|n/a
-|yes
-
 |[[input_argocd_project]] <<input_argocd_project,argocd_project>>
 |Name of the Argo CD AppProject where the Application should be created. If not set, the Application will be created in a new AppProject only for this Application.
 |`string`
@@ -272,16 +334,22 @@ Description: ID to pass other modules in order to refer to this module as a depe
 |`"v1.0.0"`
 |no
 
-|[[input_cluster_issuer]] <<input_cluster_issuer,cluster_issuer>>
-|SSL certificate issuer to use. Usually you would configure this value as `letsencrypt-staging` or `letsencrypt-prod` on your root `*.tf` files.
-|`string`
-|`"selfsigned-issuer"`
+|[[input_enable_service_monitor]] <<input_enable_service_monitor,enable_service_monitor>>
+|Enable Prometheus ServiceMonitor in the Helm chart.
+|`bool`
+|`true`
 |no
 
 |[[input_helm_values]] <<input_helm_values,helm_values>>
 |Helm chart value overrides. They should be passed as a list of HCL structures.
 |`any`
 |`[]`
+|no
+
+|[[input_deep_merge_append_list]] <<input_deep_merge_append_list,deep_merge_append_list>>
+|A boolean flag to enable/disable appending lists instead of overwriting them.
+|`bool`
+|`false`
 |no
 
 |[[input_app_autosync]] <<input_app_autosync,app_autosync>>
@@ -314,6 +382,100 @@ object({
 |IDs of the other modules on which this module depends on.
 |`map(string)`
 |`{}`
+|no
+
+|[[input_resources]] <<input_resources,resources>>
+|Resource limits and requests for External Secrets's and Reloader's components. Follow the style on https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/[official documentation] to understand the format of the values.
+
+IMPORTANT: These are not production values. You should always adjust them to your needs.
+
+|
+
+[source]
+----
+object({
+
+    external_secrets_operator = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    external_secrets_webhook = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    external_secrets_cert_controller = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+    reloader = optional(object({
+      requests = optional(object({
+        cpu    = optional(string, "10m")
+        memory = optional(string, "32Mi")
+      }), {})
+      limits = optional(object({
+        cpu    = optional(string)
+        memory = optional(string, "128Mi")
+      }), {})
+    }), {})
+
+  })
+----
+
+|`{}`
+|no
+
+|[[input_replicas]] <<input_replicas,replicas>>
+|Number of replicas for the External Secrets and Reloader components.
+|
+
+[source]
+----
+object({
+    external_secrets = number
+    reloader         = number
+  })
+----
+
+|
+
+[source]
+----
+{
+  "external_secrets": 1,
+  "reloader": 1
+}
+----
+
+|no
+
+|[[input_auto_reload_all]] <<input_auto_reload_all,auto_reload_all>>
+|Boolean to enable auto reloading for all resources.
+    
+In this case, all resources that do not have the auto annotation (or its typed version) set to "false", will be reloaded automatically when their ConfigMaps or Secrets are updated. Notice that setting the auto annotation to an undefined value counts as false as-well. " # TOD
+
+|`bool`
+|`false`
 |no
 
 |===

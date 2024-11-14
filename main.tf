@@ -6,17 +6,17 @@ resource "argocd_project" "this" {
   count = var.argocd_project == null ? 1 : 0
 
   metadata {
-    name      = var.destination_cluster != "in-cluster" ? "<CHART_NAME>-${var.destination_cluster}" : "<CHART_NAME>"
+    name      = var.destination_cluster != "in-cluster" ? "secrets-${var.destination_cluster}" : "secrets"
     namespace = "argocd"
   }
 
   spec {
-    description  = "<CHART_NAME> application project for cluster ${var.destination_cluster}"
-    source_repos = ["https://github.com/camptocamp/devops-stack-module-<CHART_NAME>.git"]
+    description  = "External Secrets and Reloader application project for cluster ${var.destination_cluster}"
+    source_repos = ["https://github.com/camptocamp/devops-stack-module-secrets.git"]
 
     destination {
       name      = var.destination_cluster
-      namespace = "<CHART_NAME>"
+      namespace = "secrets"
     }
 
     orphaned_resources {
@@ -31,15 +31,16 @@ resource "argocd_project" "this" {
 }
 
 data "utils_deep_merge_yaml" "values" {
-  input = [for i in concat(local.helm_values, var.helm_values) : yamlencode(i)]
+  input       = [for i in concat(local.helm_values, var.helm_values) : yamlencode(i)]
+  append_list = var.deep_merge_append_list
 }
 
 resource "argocd_application" "this" {
   metadata {
-    name      = var.destination_cluster != "in-cluster" ? "<CHART_NAME>-${var.destination_cluster}" : "<CHART_NAME>"
+    name      = var.destination_cluster != "in-cluster" ? "secrets-${var.destination_cluster}" : "secrets"
     namespace = "argocd"
     labels = merge({
-      "application" = "<CHART_NAME>"
+      "application" = "secrets"
       "cluster"     = var.destination_cluster
     }, var.argocd_labels)
   }
@@ -55,18 +56,18 @@ resource "argocd_application" "this" {
     project = var.argocd_project == null ? argocd_project.this[0].metadata.0.name : var.argocd_project
 
     source {
-      repo_url        = "https://github.com/camptocamp/devops-stack-module-<CHART_NAME>.git"
-      path            = "charts/<CHART_NAME>"
+      repo_url        = "https://github.com/camptocamp/devops-stack-module-secrets.git"
+      path            = "charts/secrets"
       target_revision = var.target_revision
       helm {
-        release_name = "<CHART_NAME>"
+        release_name = "secrets"
         values       = data.utils_deep_merge_yaml.values.output
       }
     }
 
     destination {
       name      = var.destination_cluster
-      namespace = "<CHART_NAME>"
+      namespace = "secrets"
     }
 
     sync_policy {
@@ -99,6 +100,7 @@ resource "argocd_application" "this" {
   ]
 }
 
+# TODO Add dependency on the modules that create the secrets
 resource "null_resource" "this" {
   depends_on = [
     resource.argocd_application.this,
