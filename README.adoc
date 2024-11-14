@@ -16,13 +16,6 @@ The charts used by this module is shipped in this repository as well, in order t
 |*Reloader* |*{reloader-chart-version}* |{reloader-original-repo-url}tree/master/deployments/kubernetes/chart/reloader[Chart] |https://artifacthub.io/packages/helm/stakater/reloader/{reloader-chart-version}?modal=values[`values.yaml`]
 |===
 
-[WARNING]
-====
-The variants of the module contained on the subfolders `aws_secrets_manager`, `azure_key_vault` and `k8s_secrets` are not fully developed yet. They are a work in progress to properly manage the secrets for all the DevOps Stack modules themselves.
-
-Consequently, only the root module is meant to be used at the moment. This will allow you to have an External Secrets Operator and Reloader deployed on your cluster which you can then used by adding the necessary manifests and annotations to your clusters.
-====
-
 == Usage
 
 This module can be declared by adding the following block on your Terraform configuration:
