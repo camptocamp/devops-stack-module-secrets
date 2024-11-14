@@ -1,18 +1,6 @@
-# TODO Remove unnecessary variables
-
 #######################
 ## Standard variables
 #######################
-
-variable "cluster_name" {
-  description = "Name given to the cluster. Value used for naming some the resources created by the module."
-  type        = string
-}
-
-variable "base_domain" {
-  description = "Base domain of the cluster. Value used for the ingress' URL of the application."
-  type        = string
-}
 
 variable "argocd_project" {
   description = "Name of the Argo CD AppProject where the Application should be created. If not set, the Application will be created in a new AppProject only for this Application."
@@ -37,19 +25,11 @@ variable "target_revision" {
   type        = string
   default     = "v1.0.0" # x-release-please-version
 }
-
 variable "enable_service_monitor" {
   description = "Enable Prometheus ServiceMonitor in the Helm chart."
   type        = bool
   default     = true
 }
-
-variable "cluster_issuer" {
-  description = "SSL certificate issuer to use. Usually you would configure this value as `letsencrypt-staging` or `letsencrypt-prod` on your root `*.tf` files."
-  type        = string
-  default     = "selfsigned-issuer"
-}
-
 variable "helm_values" {
   description = "Helm chart value overrides. They should be passed as a list of HCL structures."
   type        = any
@@ -166,7 +146,11 @@ variable "replicas" {
 }
 
 variable "auto_reload_all" {
-  description = "TODO" # TODO
+  description = <<-EOT
+    Boolean to enable auto reloading for all resources.
+    
+    In this case, all resources that do not have the auto annotation (or its typed version) set to "false", will be reloaded automatically when their ConfigMaps or Secrets are updated. Notice that setting the auto annotation to an undefined value counts as false as-well. " # TOD
+  EOT
   type        = bool
   default     = false
   nullable    = false
